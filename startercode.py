@@ -1,13 +1,15 @@
 # SI 201 HW6 (APIs, JSON, and Caching)
-# Your name:
-# Your student id:
-# Your email:
+# Your name: Ayush Madhav Kumar
+# Your student id: 3776 1271
+# Your email: ayushmk@umich.edu
 # Who or what you worked with on this homework (including generative AI like ChatGPT):
+# Worked with the course starter code, unit tests, Dog API docs
+# for implementing and verifying the required functions.
 # If you worked with generative AI also add a statement for how you used it.
-# e.g.:
-# Asked ChatGPT for help debugging and understanding the JSON structure
+# None used
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
+# aligned
 #
 # --- ARGUMENTS & EXPECTED RETURN VALUES PROVIDED --- #
 # --- SEE INSTRUCTIONS FOR FULL DETAILS ON METHOD IMPLEMENTATION --- #
@@ -232,6 +234,74 @@ def recommend_breeds_in_same_group(breed_name, cache_file):
             "No group information available for '{breed_name}'."  (no group id)
             "No recommendations found based on '{breed_name}'."  (no other breeds in that group)
     """
+    cache = load_json(cache_file)
+    if not isinstance(cache, dict) or not cache:
+        return "No breed data found in cache."
+
+    key = breed_name.casefold()
+    group_id = None
+    found = False
+
+    for entry in cache.values():
+        if not isinstance(entry, dict):
+            continue
+        data = entry.get("data")
+        if not isinstance(data, dict):
+            continue
+        attrs = data.get("attributes")
+        if not isinstance(attrs, dict):
+            continue
+        name = attrs.get("name")
+        if not isinstance(name, str):
+            continue
+        if name.casefold() != key:
+            continue
+        found = True
+        rel = data.get("relationships")
+        if isinstance(rel, dict):
+            grp = rel.get("group")
+            if isinstance(grp, dict):
+                gdata = grp.get("data")
+                if isinstance(gdata, dict):
+                    gid = gdata.get("id")
+                    if gid is not None and gid != "":
+                        group_id = gid
+        break
+
+    if not found:
+        return f"'{breed_name}' is not in the cache."
+    if group_id is None:
+        return f"No group information available for '{breed_name}'."
+
+    others = []
+    for entry in cache.values():
+        if not isinstance(entry, dict):
+            continue
+        data = entry.get("data")
+        if not isinstance(data, dict):
+            continue
+        attrs = data.get("attributes")
+        if not isinstance(attrs, dict):
+            continue
+        name = attrs.get("name")
+        if not isinstance(name, str):
+            continue
+        rel = data.get("relationships")
+        gid = None
+        if isinstance(rel, dict):
+            grp = rel.get("group")
+            if isinstance(grp, dict):
+                gdata = grp.get("data")
+                if isinstance(gdata, dict):
+                    raw = gdata.get("id")
+                    if raw is not None and raw != "":
+                        gid = raw
+        if gid == group_id and name.casefold() != key:
+            others.append(name)
+
+    if not others:
+        return f"No recommendations found based on '{breed_name}'."
+    return sorted(others)
 
 
 class TestHomeworkDogAPI(unittest.TestCase):
@@ -454,9 +524,9 @@ class TestHomeworkDogAPI(unittest.TestCase):
         self.assertEqual(get_groups_above_cutoff(3, self.test_cache_file), {})
 
     # -------------------------
-    # extra credit - uncomment tests below to evaluate extra credit function
+    # extra credit
     # -------------------------
-    """
+
     def test_recommend_breeds_in_same_group_empty_cache(self):
         create_cache({}, self.test_cache_file)
         self.assertEqual(
@@ -561,7 +631,6 @@ class TestHomeworkDogAPI(unittest.TestCase):
             recommend_breeds_in_same_group("breed a", self.test_cache_file),
             ["Breed B", "Breed Z"],
         )
-    """
 
 
 if __name__ == "__main__":

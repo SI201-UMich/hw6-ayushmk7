@@ -42,4 +42,4 @@ Run the lifespan and group-cutoff tests until they pass.
 
 ---
 
-*(Optional extra credit: implement `recommend_breeds_in_same_group` after the four steps above; the tests for it are commented out in `startercode.py`.)*
+*Extra credit: `recommend_breeds_in_same_group` is implemented in `startercode.py` and its tests are enabled in the test class.*
