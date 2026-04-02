@@ -138,7 +138,35 @@ def get_longest_lifespan_breed(cache_file):
         A tuple (breed_name, max_lifespan_integer) for the winning breed, OR the
         string "No breeds found" if no breed in the cache has a life.max value.
     """
-    pass
+    cache = load_json(cache_file)
+    if not isinstance(cache, dict):
+        cache = {}
+    best_name, best_max = None, None
+    for entry in cache.values():
+        if not isinstance(entry, dict):
+            continue
+        data = entry.get("data")
+        if not isinstance(data, dict):
+            continue
+        attrs = data.get("attributes")
+        if not isinstance(attrs, dict):
+            continue
+        name = attrs.get("name")
+        if not isinstance(name, str):
+            continue
+        life = attrs.get("life")
+        if not isinstance(life, dict):
+            continue
+        max_life = life.get("max")
+        if not isinstance(max_life, int):
+            continue
+        if best_max is None or max_life > best_max or (
+            max_life == best_max and name < best_name
+        ):
+            best_name, best_max = name, max_life
+    if best_max is None:
+        return "No breeds found"
+    return (best_name, best_max)
 
 
 def get_groups_above_cutoff(cutoff, cache_file):
@@ -157,7 +185,30 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
-    pass
+    cache = load_json(cache_file)
+    if not isinstance(cache, dict):
+        cache = {}
+    counts = {}
+    for entry in cache.values():
+        if not isinstance(entry, dict):
+            continue
+        data = entry.get("data")
+        if not isinstance(data, dict):
+            continue
+        rel = data.get("relationships")
+        if not isinstance(rel, dict):
+            continue
+        group = rel.get("group")
+        if not isinstance(group, dict):
+            continue
+        gdata = group.get("data")
+        if not isinstance(gdata, dict):
+            continue
+        gid = gdata.get("id")
+        if gid is None or gid == "":
+            continue
+        counts[gid] = counts.get(gid, 0) + 1
+    return {gid: c for gid, c in counts.items() if c >= cutoff}
 
 
 # Extra Credit
